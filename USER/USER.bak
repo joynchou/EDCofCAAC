@@ -1,0 +1,372 @@
+/************************************************************
+* 文件名称: USER.C
+* 作者: 周晨阳
+* 版本: 1.0
+* 日期: 2017/4/29
+* 描述: // 用户层的函数文件
+* 主要函数及其功能 : // 主要函数及其功能
+  1.void setup(void )//初始化函数
+  2.void loop(void)//死循环函数，相当于while（1）{}
+* 历史修改记录: // 历史修改记录
+* <作者> <时间> <版本 > <描述>
+* 周晨阳 2017/4/29 添加了此文件说明注释
+***********************************************************/
+#include "USER.h"
+#include "../ANGLE/ANGLE.h"
+#include "../DISPLAY/DISPLAY.h"
+#include "../MOTOR/MOTOR.h"
+#include "../BUTTON/BUTTON.h"
+#include "../DISPLAY/DataScope_DP.h"
+#include "../GUI/GUI_BASIC.H"
+#include "../GUI/FONT8_8.H"
+#include "../GUI/GUI_StockC.h"
+#include "../GUI/MENU.h"
+#include "../GUI/WINDOWS.h"
+
+
+
+
+//如有调试需要，请到user.h中将相应的宏定义开启
+u8 angle=50,i=0;//默认角度
+float kp=3.0f,ki=0.02f,kd=1.0f,leftMotorSpeed=0.5f,rightMotorSpeed=0.5f;
+void setup(void )//初始化函数
+{  
+    UART1_init(UART1_BANDRATE);    //串口初始化
+//	GUI_Initialize(); //初始化液晶
+    Button_config();//按键初始化
+    ADC_config(ANGLE_PIN,ANGLE_Speed);   //adc初始化
+    PID_config(kp,ki,kd);//pid算法初始化	
+	setMenu_MAXandMIN(7,1);//菜单级数,最大级数为6
+    PWM_config(PWM_2);//pwm初始化
+    PWM_config(PWM_4);
+    PWM_period(5000);        
+    PWM_duty(PWM_2,0.5f); //默认占空比0.5f
+    PWM_duty(PWM_4,0.5f);
+	  EA = 1;  //总中断开关
+	 // CLOSE_PWM();
+	///	Draw_Line(0,0,0,10,1);
+	//	GUI_SetColor(1,0);
+	//	GUI_Rectangle(30,30,60,60,1);
+	//	LCD_UpdateAll();
+
+}
+void loop()
+{
+  
+
+}
+//串口示波器数据发送函数
+void sendScopeData(void)
+{
+	u8 a; //
+  u8 Send_Count;
+
+    DataScope_Get_Channel_Data(getPID_data(ERR)  ,1);  //误差数据
+    DataScope_Get_Channel_Data(getPID_data(OUTPUT)+angle  ,2);  //实际输出数据
+    DataScope_Get_Channel_Data(getPID_data(INTEGRAL)  ,3);  //积分数据
+    DataScope_Get_Channel_Data(angle  ,4);  //设定角度
+    DataScope_Get_Channel_Data(getAngle(PRESENT_ANGLE)  ,5);  //实际角度
+    Send_Count = DataScope_Data_Generate(5); //
+    for( a = 0 ; a < Send_Count; a++)
+    {
+        TX1_write2buff(DataScope_OutPut_Buffer[a]); //发送一通道数据到串口示波器
+    }
+   // delay_ms(10);
+
+}
+//按键设置pid参数函数
+void setAngle(void)
+{
+
+	static bit BUTTON1_bit=0; 
+ 	static bit BUTTON2_bit=0;
+	static bit BUTTON3_bit=0;
+	static bit BUTTON4_bit=0;
+	static u8 setAngle1=70;
+	static u8 setAngle2=80;
+	
+	
+#ifdef PID_DEBUG	
+	  if(getButtonState(BUTTON3_GPIO_PIN))
+	 {   
+		  if(!BUTTON3_bit)
+			{
+		  BUTTON3_bit=1;
+		  
+		switch(getMenuNum(FIRST_MEUN_NUM))
+            {
+            case 1:
+            {
+                kp+=0.1f ;
+                setPID_data(KP,kp);
+                LCD12864_NUMI_WRITE(0,0,kp);
+            } ;
+            break;
+            case 2 :
+            {
+                ki+=0.005f ;
+                setPID_data(KI,ki);
+                 LCD12864_NUMI_WRITE(0,1,ki);
+            };
+            break;
+            case 3:
+            {
+                kd+=0.1f ;
+                setPID_data(KD,kd);
+                LCD12864_NUMI_WRITE(0,2,kd);
+            };
+            break;
+            case 4:
+            {
+							
+							angle+=2;
+              LCD12864_NUMI_WRITE(0,3,angle);
+            };
+            break;
+						 case 5:
+            {
+							leftMotorSpeed+=0.01f;
+							setMotorSpeed(LEFT_MOTOR,leftMotorSpeed);
+              LCD12864_NUMI_WRITE(3,1,leftMotorSpeed);
+            };
+            break;
+						 case 6:
+            {
+							rightMotorSpeed+=0.01f;
+							setMotorSpeed(RIGHT_MOTOR,rightMotorSpeed);
+              LCD12864_NUMI_WRITE(3,2,rightMotorSpeed);
+            };
+            break;
+						case 7:
+            {
+							PWM_ALL_EN;
+            };
+            break;
+            }
+					}						
+		 
+	 }
+	 else
+	 {
+	   BUTTON3_bit=0;
+	 }
+	 
+	  if(getButtonState(BUTTON4_GPIO_PIN))
+	 {
+		  if(!BUTTON4_bit)
+			{
+			BUTTON4_bit=1;
+		  
+		 switch(getMenuNum(FIRST_MEUN_NUM))
+            {
+            case 1:
+            {
+                kp-=0.1f ;
+                setPID_data(KP,kp);
+                 LCD12864_NUMI_WRITE(0,0,kp);
+            } ;
+            break;
+            case 2 :
+            {
+                ki-=0.005f ;
+                setPID_data(KI,ki);
+                LCD12864_NUMI_WRITE(0,1,ki);
+            };
+            break;
+            case 3:
+            {
+                kd-=0.1f ;
+                setPID_data(KD,kd);
+                LCD12864_NUMI_WRITE(0,2,kd);
+            };
+            break;
+						case 4:
+            {
+							angle-=2;
+              LCD12864_NUMI_WRITE(0,3,angle);
+            };
+            break;
+						 case 5:
+            {
+							
+							setMotorSpeed(LEFT_MOTOR,leftMotorSpeed);
+							leftMotorSpeed-=0.01f;
+             LCD12864_NUMI_WRITE(3,1,leftMotorSpeed);
+            };
+            break;
+						 case 6:
+            {
+							setMotorSpeed(RIGHT_MOTOR,rightMotorSpeed);
+							rightMotorSpeed-=0.01f;
+              LCD12864_NUMI_WRITE(3,2,rightMotorSpeed);
+            };
+            break;
+						case 7:
+            {
+							PWM_ALL_NO;
+            };
+            break;
+            }
+		 
+	    }				 
+	 }
+	 else
+	 {
+	   BUTTON4_bit=0;
+	 }
+#else
+    if(getButtonState(BUTTON1_GPIO_PIN))
+	 {   
+		  if(!BUTTON1_bit)
+			{
+		  BUTTON1_bit=1;
+		  
+		switch(getMenuNum(FIRST_MEUN_NUM))
+            {
+            case 1:
+            {	 setAngle1++;
+                LCD12864_NUMI_WRITE(0,0,setAngle1);
+            } ;
+            break;
+            case 2 :
+            {	 setAngle2++;
+                 LCD12864_NUMI_WRITE(0,1,setAngle2);
+            };
+            break;
+            case 3:
+            {
+                LCD12864_NUMI_WRITE(0,2,kd);
+            };
+            break;
+            case 4:
+            {
+              LCD12864_NUMI_WRITE(0,3,angle);
+            };
+            break;
+			case 5:
+            {
+              LCD12864_NUMI_WRITE(3,1,leftMotorSpeed);
+            };
+            break;
+			case 6:
+            {
+              LCD12864_NUMI_WRITE(3,2,rightMotorSpeed);
+            };
+            break;
+			case 7:
+            {
+            };
+            break;
+            }
+					}						
+		 
+	 }
+	 else
+	 {
+	   BUTTON1_bit=0;
+	 }
+	 if(getButtonState(BUTTON2_GPIO_PIN))
+	 {   
+		  if(!BUTTON2_bit)
+			{
+		  BUTTON2_bit=1;
+		  
+		switch(getMenuNum(FIRST_MEUN_NUM))
+            {
+            case 1:
+            {   setAngle1--;
+                LCD12864_NUMI_WRITE(0,0,setAngle1);
+               
+            } ;
+            break;
+            case 2 :
+            {	 setAngle2--;
+                LCD12864_NUMI_WRITE(0,0,setAngle2);
+            };
+            break;
+            case 3:
+            {
+                LCD12864_NUMI_WRITE(0,2,kd);
+            };
+            break;
+            case 4:
+            {
+              LCD12864_NUMI_WRITE(0,3,angle);
+            };
+            break;
+			case 5:
+            {
+              LCD12864_NUMI_WRITE(3,1,leftMotorSpeed);
+            };
+            break;
+			case 6:
+            {
+              LCD12864_NUMI_WRITE(3,2,rightMotorSpeed);
+            };
+            break;
+			case 7:
+            {
+            };
+            break;
+            }
+					}						
+		 
+	 }
+	 else
+	 {
+	   BUTTON2_bit=0;
+	 }
+	if(getButtonState(BUTTON3_GPIO_PIN))
+	 {   
+		  if(!BUTTON3_bit)
+			{
+		  BUTTON3_bit=1;
+		  
+		switch(getMenuNum(FIRST_MEUN_NUM))
+            {
+            case 1:
+            {   setAngle1--;
+                LCD12864_NUMI_WRITE(0,0,setAngle1);
+               
+            } ;
+            break;
+            case 2 :
+            {	 setAngle2--;
+                LCD12864_NUMI_WRITE(0,0,setAngle2);
+            };
+            break;
+            case 3:
+            {
+                LCD12864_NUMI_WRITE(0,2,kd);
+            };
+            break;
+            case 4:
+            {
+              LCD12864_NUMI_WRITE(0,3,angle);
+            };
+            break;
+			case 5:
+            {
+              LCD12864_NUMI_WRITE(3,1,leftMotorSpeed);
+            };
+            break;
+			case 6:
+            {
+              LCD12864_NUMI_WRITE(3,2,rightMotorSpeed);
+            };
+            break;
+			case 7:
+            {
+            };
+            break;
+            }
+					}						
+		 
+	 }
+	 else
+	 {
+	   BUTTON2_bit=0;
+	 } 
+
+#endif	
+}
