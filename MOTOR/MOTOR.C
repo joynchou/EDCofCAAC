@@ -1,35 +1,36 @@
 /************************************************************
-* ×éÖ¯Ãû³Æ£º (C), 1988-1999, Tech. Co., Ltd.
-* ÎÄ¼þÃû³Æ: MOTOR.C
-* ×÷Õß:  ÖÜ³¿Ñô
-* °æ±¾:  1.3
-* ÈÕÆÚ:  17/4/29
-* ÃèÊö:  ºÍµç»úÓÐ¹ØµÄ¿ØÖÆº¯Êý¶¼ÔÚÕâÀï£¬»¹ÓÐpidËã·¨¿ØÖÆÒ²ÔÚÆäÖÐ
-* Ö÷Òªº¯Êý¼°Æä¹¦ÄÜ : // Ö÷Òªº¯Êý¼°Æä¹¦ÄÜ
+* ç»„ç»‡åç§°ï¼š (C), 1988-1999, Tech. Co., Ltd.
+* æ–‡ä»¶åç§°: MOTOR.C
+* ä½œè€…:  å‘¨æ™¨é˜³
+* ç‰ˆæœ¬:  1.3
+* æ—¥æœŸ:  17/4/29
+* æè¿°:  å’Œç”µæœºæœ‰å…³çš„æŽ§åˆ¶å‡½æ•°éƒ½åœ¨è¿™é‡Œï¼Œè¿˜æœ‰pidç®—æ³•æŽ§åˆ¶ä¹Ÿåœ¨å…¶ä¸­
+* ä¸»è¦å‡½æ•°åŠå…¶åŠŸèƒ½ : // ä¸»è¦å‡½æ•°åŠå…¶åŠŸèƒ½
   1. -------
-* ÀúÊ·ÐÞ¸Ä¼ÇÂ¼: // ÀúÊ·ÐÞ¸Ä¼ÇÂ¼
-* <×÷Õß> <Ê±¼ä> <°æ±¾ > <ÃèÊö>
-* ÖÜ³¿Ñô 17/4/29 1.0 ´´½¨´ËÃèÊö
-* ÖÜ³¿Ñô 17/5/4  1.1 »ý·Ö·½Ãæ¼ÓÈëÁË»ý·Ö·ÖÀë·¨£¬pidÐ§¹ûÃ÷ÏÔÌáÉý
-* ÖÜ³¿Ñô 17/5/3  1.2 ¸Ä½øÁËpwm·¢Éúº¯ÊýºÍ¿ª»·¿ØÖÆ½Ç¶ÈµÄº¯Êý£¬¼ÓÁËËÀÇø¿ØÖÆ
-* ÖÜ³¿Ñô 17/5/7  1.3 ½«½Ç¶ÈÉèÖÃÓÉÔ­À´µÄÕûÊýÉý¼¶³É¸¡µãÊý£¬Ìá¸ßÁË¾«¶È
+* åŽ†å²ä¿®æ”¹è®°å½•: // åŽ†å²ä¿®æ”¹è®°å½•
+* <ä½œè€…> <æ—¶é—´> <ç‰ˆæœ¬ > <æè¿°>
+* å‘¨æ™¨é˜³ 17/4/29 1.0 åˆ›å»ºæ­¤æè¿°
+* å‘¨æ™¨é˜³ 17/5/4  1.1 ç§¯åˆ†æ–¹é¢åŠ å…¥äº†ç§¯åˆ†åˆ†ç¦»æ³•ï¼Œpidæ•ˆæžœæ˜Žæ˜¾æå‡
+* å‘¨æ™¨é˜³ 17/5/3  1.2 æ”¹è¿›äº†pwmå‘ç”Ÿå‡½æ•°å’Œå¼€çŽ¯æŽ§åˆ¶è§’åº¦çš„å‡½æ•°ï¼ŒåŠ äº†æ­»åŒºæŽ§åˆ¶
+* å‘¨æ™¨é˜³ 17/5/7  1.3 å°†è§’åº¦è®¾ç½®ç”±åŽŸæ¥çš„æ•´æ•°å‡çº§æˆæµ®ç‚¹æ•°ï¼Œæé«˜äº†ç²¾åº¦
 ***********************************************************/
 #include "MOTOR.h"
 #include "../ANGLE/ANGLE.h"
 #include <math.h>
-#define  INTEGRAL_SEPARATE //Ê¹ÓÃ»ý·Ö·ÖÀë·¨
-static float Ki_temp,Kp_temp,Kd_temp; //±£´æpidÈý¸ö²ÎÊýµÄ¾²Ì¬±äÁ¿
-//pidËã·¨µÄ¾²Ì¬½á¹¹Ìå
+#define  INTEGRAL_SEPARATE //ä½¿ç”¨ç§¯åˆ†åˆ†ç¦»æ³•
+static float Ki_temp,Kp_temp,Kd_temp; //ä¿å­˜pidä¸‰ä¸ªå‚æ•°çš„é™æ€å˜é‡
+//pidç®—æ³•çš„é™æ€ç»“æž„ä½“//
+//test
 
 static struct
 {
-    float setAngle;//Éè¶¨½Ç¶ÈÖµ
-    float actualAngle;//Êµ¼Ê½Ç¶ÈÖµ
-    float err;//Æ«²îÖµ
-    float err_last;//ÉÏÒ»´ÎÆ«²îÖµ
-    float Kp,Ki,Kd;//±ÈÀý£¬»ý·Ö£¬Î¢·ÖÏµÊý
-    float integral;//»ý·ÖÖµ,Î»ÖÃÊ½pidËã·¨
-    float output;  //Êµ¼ÊÊä³öÒò×Ó
+    float setAngle;//è®¾å®šè§’åº¦å€¼
+    float actualAngle;//å®žé™…è§’åº¦å€¼
+    float err;//åå·®å€¼
+    float err_last;//ä¸Šä¸€æ¬¡åå·®å€¼
+    float Kp,Ki,Kd;//æ¯”ä¾‹ï¼Œç§¯åˆ†ï¼Œå¾®åˆ†ç³»æ•°
+    float integral;//ç§¯åˆ†å€¼,ä½ç½®å¼pidç®—æ³•
+    float output;  //å®žé™…è¾“å‡ºå› å­
 } pid;
 void stopMotor(void)
 {
@@ -41,12 +42,12 @@ void startMotor(void)
    OPEN_PWM();
 }
 /*************************************************
-* º¯ÊýÃû³Æ: void setMotorSpeed(bit motor,float speed)
-* ÃèÊö: ÉèÖÃµç»úËÙ¶Èº¯Êý
-* ÊäÈë: motor£ºµç»ú£¬Í·ÎÄ¼þÖÐ¶¨Òå
-				speed£ºËÙ¶È 0~1   
-* ÆäËûËµÃ÷: 
-*ÈôÒª¹Ø±Õµç»úÇëÊ¹ÓÃµç»ú¹Ø±Õº¯Êý£¬´Ëº¯ÊýÎÞ·¨¹Ø±Õµç»ú
+* å‡½æ•°åç§°: void setMotorSpeed(bit motor,float speed)
+* æè¿°: è®¾ç½®ç”µæœºé€Ÿåº¦å‡½æ•°
+* è¾“å…¥: motorï¼šç”µæœºï¼Œå¤´æ–‡ä»¶ä¸­å®šä¹‰
+				speedï¼šé€Ÿåº¦ 0~1   
+* å…¶ä»–è¯´æ˜Ž: 
+*è‹¥è¦å…³é—­ç”µæœºè¯·ä½¿ç”¨ç”µæœºå…³é—­å‡½æ•°ï¼Œæ­¤å‡½æ•°æ— æ³•å…³é—­ç”µæœº
 *************************************************/                                                          
 void setMotorSpeed(bit motor,float speed)
 {
@@ -63,7 +64,7 @@ void setMotorSpeed(bit motor,float speed)
 		
 		if(motor)
 		{
-			PWM_duty(PWM_2,speed*0.65f);//¸ù¾Ý²»Í¬µç»ú³ËÓÚ²»Í¬µÄÔöÒæ
+			PWM_duty(PWM_2,speed*0.65f);//æ ¹æ®ä¸åŒç”µæœºä¹˜äºŽä¸åŒçš„å¢žç›Š
 		}
 		else
 		{
@@ -72,14 +73,14 @@ void setMotorSpeed(bit motor,float speed)
 }
 
 /*************************************************
-* º¯ÊýÃû³Æ: bit setBoardWithAngle(unsigned char angle)
-* ÃèÊö: ¿ª»·µÄ·ç°Ú½Ç¶È¿ØÖÆº¯Êý
-* ÊäÈë: ½Ç¶È
-* ·µ»ØÖµ: µ±º¯ÊýÖ´ÐÐÍêºó·µ»Ø1
-* ÆäËûËµÃ÷: 
-*						´Ëº¯Êý²»µ¥¶ÀÊ¹ÓÃ£¬Íâ½çÎÞ·¨µ÷ÓÃ´Ëº¯Êý£¬
-*						ÇëÊ¹ÓÃÏÂÃæµÄ´øpidËã·¨µÄº¯ÊýsetBoardWithAngleAndPID£¨£©
-*           ´Ëº¯Êý´æÔÚµÄÄ¿µÄÊÇpidËã·¨µÄÐèÒª¡£
+* å‡½æ•°åç§°: bit setBoardWithAngle(unsigned char angle)
+* æè¿°: å¼€çŽ¯çš„é£Žæ‘†è§’åº¦æŽ§åˆ¶å‡½æ•°
+* è¾“å…¥: è§’åº¦
+* è¿”å›žå€¼: å½“å‡½æ•°æ‰§è¡Œå®ŒåŽè¿”å›ž1
+* å…¶ä»–è¯´æ˜Ž: 
+*						æ­¤å‡½æ•°ä¸å•ç‹¬ä½¿ç”¨ï¼Œå¤–ç•Œæ— æ³•è°ƒç”¨æ­¤å‡½æ•°ï¼Œ
+*						è¯·ä½¿ç”¨ä¸‹é¢çš„å¸¦pidç®—æ³•çš„å‡½æ•°setBoardWithAngleAndPIDï¼ˆï¼‰
+*           æ­¤å‡½æ•°å­˜åœ¨çš„ç›®çš„æ˜¯pidç®—æ³•çš„éœ€è¦ã€‚
 *************************************************/
 static bit setBoardWithAngle(float angle)
 {
@@ -105,15 +106,15 @@ static bit setBoardWithAngle(float angle)
 }
 
 /*************************************************
-* º¯ÊýÃû³Æ: bit setBoardWithAngleAndPID(unsigned char angle)
-* ÃèÊö: ´øpidËã·¨µÄ·ç°Ú½Ç¶Èµ÷Õûº¯Êý
-* ÊäÈë: ÎÞ
-* ·µ»ØÖµ: Ö´ÐÐÒ»´Î½Ç¶Èµ÷Õûºó£¬·µ»Ø1
-* ÆäËûËµÃ÷: ÔÚÖ´ÐÐµ÷ÕûÊ±»áÏò´®¿Ú·¢ËÍÕýÔÚµ÷ÕûµÄÌáÊ¾¡£
-***º¯Êý¸üÐÂ****
-  ×÷Õß  |  Ê±¼ä  |  ËµÃ÷
-*ÖÜ³¿Ñô	   5/16		ÇëÊ¹ÓÃpidÉèÖÃº¯ÊýsetPID_data£¨£©
-									ÉèÖÃÐèÒªÎÈ¶¨µÄ½Ç¶È£¬²»ÒªÏò´Ëº¯Êý´«Öµ*
+* å‡½æ•°åç§°: bit setBoardWithAngleAndPID(unsigned char angle)
+* æè¿°: å¸¦pidç®—æ³•çš„é£Žæ‘†è§’åº¦è°ƒæ•´å‡½æ•°
+* è¾“å…¥: æ— 
+* è¿”å›žå€¼: æ‰§è¡Œä¸€æ¬¡è§’åº¦è°ƒæ•´åŽï¼Œè¿”å›ž1
+* å…¶ä»–è¯´æ˜Ž: åœ¨æ‰§è¡Œè°ƒæ•´æ—¶ä¼šå‘ä¸²å£å‘é€æ­£åœ¨è°ƒæ•´çš„æç¤ºã€‚
+***å‡½æ•°æ›´æ–°****
+  ä½œè€…  |  æ—¶é—´  |  è¯´æ˜Ž
+*å‘¨æ™¨é˜³	   5/16		è¯·ä½¿ç”¨pidè®¾ç½®å‡½æ•°setPID_dataï¼ˆï¼‰
+									è®¾ç½®éœ€è¦ç¨³å®šçš„è§’åº¦ï¼Œä¸è¦å‘æ­¤å‡½æ•°ä¼ å€¼*
 *************************************************/
 bit setBoardWithAngleAndPID(float angle)
 {    
@@ -140,13 +141,13 @@ bit setBoardWithAngleAndPID(float angle)
     pid.actualAngle   =           getAngle(PRESENT_ANGLE);
     pid.err           =           pid.setAngle-pid.actualAngle;
 #ifdef  INTEGRAL_SEPARATE
-    if(abs(pid.err)<10.0f)//»ý·Ö·ÖÀë·¨£¬·ÀÖ¹Îó²î¹ý´óÊ±»ý·ÖÀÛ»ý¹ý´óÔì³ÉÕðµ´£¬Í¬Ê±¼õÐ¡±ÈÀýºÍÎ¢·Ö
+    if(abs(pid.err)<10.0f)//ç§¯åˆ†åˆ†ç¦»æ³•ï¼Œé˜²æ­¢è¯¯å·®è¿‡å¤§æ—¶ç§¯åˆ†ç´¯ç§¯è¿‡å¤§é€ æˆéœ‡è¡ï¼ŒåŒæ—¶å‡å°æ¯”ä¾‹å’Œå¾®åˆ†
     {   pid.Ki        =        Ki_temp;
         pid.integral  +=       pid.err;
         pid.Kp        =        Kp_temp-0.7f;
         pid.Kd        =        Kd_temp-0.5f;
     }
-    else//Îó²î¹ý´óÊ±È¥³ý»ý·ÖÏîºÍÀÛ¼ÆÎó²î £¬½öÊ¹ÓÃ±ÈÀýºÍÎ¢·Ö £¬Í¬Ê±ÔÚÔ­»ù´¡ÉÏ¼Ó´óÎ¢·ÖµÄ×÷ÓÃ
+    else//è¯¯å·®è¿‡å¤§æ—¶åŽ»é™¤ç§¯åˆ†é¡¹å’Œç´¯è®¡è¯¯å·® ï¼Œä»…ä½¿ç”¨æ¯”ä¾‹å’Œå¾®åˆ† ï¼ŒåŒæ—¶åœ¨åŽŸåŸºç¡€ä¸ŠåŠ å¤§å¾®åˆ†çš„ä½œç”¨
     {
         pid.Ki        =        0;
 	      pid.integral  =        0;
@@ -162,12 +163,12 @@ bit setBoardWithAngleAndPID(float angle)
 }
 
 /*************************************************
-* º¯ÊýÃû³Æ:double getPID_data(u8 DATA)
-* ÃèÊö: ¶ÁÈ¡pid²ÎÊý      
-* ÊäÈë: ¼ûºê¶¨Òå      
-* Êä³ö: 
-* ·µ»ØÖµ: ÏàÓ¦pid²ÎÊý
-* ÆäËûËµÃ÷: ÈôÃ»ÓÐÉèÖÃpid²ÎÊý¾ÍÖ±½Ó¶ÁÈ¡£¬Ôò½á¹ûÎ´Öª¡£
+* å‡½æ•°åç§°:double getPID_data(u8 DATA)
+* æè¿°: è¯»å–pidå‚æ•°      
+* è¾“å…¥: è§å®å®šä¹‰      
+* è¾“å‡º: 
+* è¿”å›žå€¼: ç›¸åº”pidå‚æ•°
+* å…¶ä»–è¯´æ˜Ž: è‹¥æ²¡æœ‰è®¾ç½®pidå‚æ•°å°±ç›´æŽ¥è¯»å–ï¼Œåˆ™ç»“æžœæœªçŸ¥ã€‚
 *************************************************/
 
 float getPID_data(u8 DATA)
@@ -204,14 +205,14 @@ float getPID_data(u8 DATA)
     }
 }
 /*************************************************
-* º¯ÊýÃû³Æ:void setPID_data(u8 DATA,float value)
-* ÃèÊö:  ÉèÖÃpidÈý¸ö²ÎÊýµÄº¯Êý£¬Ò»´ÎÐÔÖ»ÄÜÉèÖÃÒ»¸ö²ÎÊý
-*        ¿É×÷Îªµ÷ÕûPID²ÎÊýµÄ½Ó¿Ú¡£
-* ÊäÈë: u8 DATA £ºÐèÒª¸ü¸ÄµÄ²ÎÊýÃû³Æ£¬Îªºê¶¨Òå,
-        float value£º²ÎÊýÖµ
-* Êä³ö: ÎÞ
-* ·µ»ØÖµ: ÎÞ
-* ÆäËûËµÃ÷: ÎÞ
+* å‡½æ•°åç§°:void setPID_data(u8 DATA,float value)
+* æè¿°:  è®¾ç½®pidä¸‰ä¸ªå‚æ•°çš„å‡½æ•°ï¼Œä¸€æ¬¡æ€§åªèƒ½è®¾ç½®ä¸€ä¸ªå‚æ•°
+*        å¯ä½œä¸ºè°ƒæ•´PIDå‚æ•°çš„æŽ¥å£ã€‚
+* è¾“å…¥: u8 DATA ï¼šéœ€è¦æ›´æ”¹çš„å‚æ•°åç§°ï¼Œä¸ºå®å®šä¹‰,
+        float valueï¼šå‚æ•°å€¼
+* è¾“å‡º: æ— 
+* è¿”å›žå€¼: æ— 
+* å…¶ä»–è¯´æ˜Ž: æ— 
 *************************************************/
 void setPID_data(u8 DATA,float value)
 {
@@ -235,20 +236,20 @@ void setPID_data(u8 DATA,float value)
         break;
     }
 }
-//PIDËã·¨³õÊ¼»¯º¯Êý  .
+//PIDç®—æ³•åˆå§‹åŒ–å‡½æ•°  .
 /*************************************************
-* º¯ÊýÃû³Æ: void PID_config(float kp,float ki,float kd)
-* ÃèÊö:   pidËã·¨³õÊ¼»¯º¯Êý£¬²ÎÊýÊÇÈý¸ö£¬P,I,D,
-*         ´Ëº¯ÊýÖ»ÄÜ×÷Îª³õÊ¼»¯£¬²»ÄÜ×÷Îªµ÷ÕûÕâÈý¸öÖµµÄ½Ó¿Ú
-          Èç¹ûÐèÒªµ÷ÕûÕâÈý¸öÖµ£¬ÇëÊ¹ÓÃsetPID_data()º¯Êý
-* ÊäÈë: float kp,float ki,float kd
-* Êä³ö: ÎÞ
-* ·µ»ØÖµ: ÎÞ
-* ÆäËûËµÃ÷: ÎÞ
+* å‡½æ•°åç§°: void PID_config(float kp,float ki,float kd)
+* æè¿°:   pidç®—æ³•åˆå§‹åŒ–å‡½æ•°ï¼Œå‚æ•°æ˜¯ä¸‰ä¸ªï¼ŒP,I,D,
+*         æ­¤å‡½æ•°åªèƒ½ä½œä¸ºåˆå§‹åŒ–ï¼Œä¸èƒ½ä½œä¸ºè°ƒæ•´è¿™ä¸‰ä¸ªå€¼çš„æŽ¥å£
+          å¦‚æžœéœ€è¦è°ƒæ•´è¿™ä¸‰ä¸ªå€¼ï¼Œè¯·ä½¿ç”¨setPID_data()å‡½æ•°
+* è¾“å…¥: float kp,float ki,float kd
+* è¾“å‡º: æ— 
+* è¿”å›žå€¼: æ— 
+* å…¶ä»–è¯´æ˜Ž: æ— 
 *************************************************/
-void PID_config(float kp,float ki,float kd)//pidËã·¨³õÊ¼»¯º¯Êý£¬²ÎÊýÊÇÈý¸ö£¬PID
+void PID_config(float kp,float ki,float kd)//pidç®—æ³•åˆå§‹åŒ–å‡½æ•°ï¼Œå‚æ•°æ˜¯ä¸‰ä¸ªï¼ŒPID
 {
-    pid.setAngle=70;//Èô×îÖÕÃ»ÓÐÉèÖÃ½Ç¶ÈÔòÄ¬ÈÏ70¶È
+    pid.setAngle=70;//è‹¥æœ€ç»ˆæ²¡æœ‰è®¾ç½®è§’åº¦åˆ™é»˜è®¤70åº¦
     pid.actualAngle=0;
     pid.err=0;
     pid.err_last=0;
