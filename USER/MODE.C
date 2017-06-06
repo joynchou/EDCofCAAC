@@ -1,0 +1,372 @@
+/************************************************************
+* 组织名称：电子大赛小组
+* 文件名称: MODE.C
+* 作者: 周晨阳
+* 版本 beta 1.1
+* 日期: 5/26
+* 描述: 用来选择模式和执行模式程序的文件
+* 历史修改记录: // 历史修改记录
+* <作者> <时间> <版本 > <描述>
+* 周晨阳 17/5/28 1.0			增加了模式一
+* 周晨阳	 17/6/6  1.1    增加了模式二
+***********************************************************/
+
+#include "MODE.H"
+#include "timer.h" //包含定时器头文件
+#include "../RTOS/OS.h"
+#include "../USER/delay.h"
+#include "../USER/USART1.h"
+#include <math.h>
+  static u8 mode=0; //默认模式0，开机后请用按键选择模式
+//按键检测，4个按键对应4个模式
+
+void modeSelect(void)
+{
+	static bit BUTTON1_bit = 0;  //按键按下标志位
+	static bit BUTTON2_bit = 0;  //同上
+	static bit BUTTON3_bit = 0;
+	static bit BUTTON4_bit = 0;
+
+	if (getButtonState(BUTTON1_GPIO_PIN))
+	{
+		if (!BUTTON1_bit)
+		{
+			mode=1;
+			BUTTON1_bit = 1;
+		
+		}
+
+	}
+	else
+	{
+		BUTTON1_bit = 0;
+	}
+
+	if (getButtonState(BUTTON2_GPIO_PIN))
+	{
+		if (!BUTTON2_bit)
+		{
+			BUTTON2_bit = 1;
+
+		  mode=2;
+
+		}
+	}
+	else
+	{
+		BUTTON2_bit = 0;
+	}
+		if (getButtonState(BUTTON3_GPIO_PIN))
+	{
+		if (!BUTTON3_bit)
+		{
+			mode=3;
+			BUTTON3_bit = 1;
+		
+		}
+
+	}
+	else
+	{
+		BUTTON3_bit = 0;
+	}
+
+	if (getButtonState(BUTTON4_GPIO_PIN))
+	{
+		if (!BUTTON4_bit)
+		{
+			BUTTON4_bit = 1;
+
+		  mode=4;
+
+		}
+	}
+	else
+	{
+		BUTTON4_bit = 0;
+	}
+
+	
+}
+//不同模式对应的程序。
+void modeStart(void)
+{  
+	 switch(mode)
+	 {
+		 case 1://模式1
+		 {
+			 	static bit step1=0;//模式一步骤1标志位
+				static bit step2=0; //步骤2 标志位
+				static bit step3=0;  //步骤三标志位
+
+			 if(step1)//步骤一已经完成
+			 {
+				 
+				  if(step2) //如果步骤2已完成
+					{
+						  if(step3) //如果步骤三已经完成
+							{
+								  //模式一已经完成 ，蜂鸣器开始叫
+								mode=0;//初始化模式
+								step1=0;
+								step2=0;
+								step3=0;
+								
+							}
+							else//如果步骤三没有完成
+							{
+								stopMotor();
+								step3=OK;
+								PrintString1("step3 is ok\n");
+								
+							}
+						
+					}
+					else //如果步骤二没有完成
+					{
+					setTimeout(Timer1,5000); //设置定时器定时长度 ,5秒
+		//////////////////////定时器////////////////////////////////////////
+					if(isExpiredTimer(Timer1))   //如果达到定时时间
+					{
+						
+						  setMotorSpeed(LEFT_MOTOR,0.01f);
+						  setMotorSpeed(RIGHT_MOTOR,0.99f);
+							step2=OK;
+						  PrintString1("step2 is ok\n");
+					}
+					else//如果未达到定时时间或定时器未启动
+					{ 
+						
+						if(isStopped(Timer1)) //只有当定时器是停止状态时才启动定时器。
+						{
+							restartTimer(Timer1);
+							
+						}
+					}
+		////////////////////////////////////////////////////////////////		   
+					
+					}
+			 }
+			 else //如果步骤一没有完成
+			 {
+				 setPID_data(SET_ANGLE,100); //设定稳定角度
+				 setTimeout(Timer1,5000); //设置定时器定时长度 ,3秒
+				 startMotor();//电机开始工作
+				 if(abs(getPID_data(ERR))<2.0f)//当误差小于2°时，认为达到稳定,定时器就开始计时
+				{
+		//////////////////////定时器////////////////////////////////////////
+					if(isExpiredTimer(Timer1))   //如果达到定时时间
+					{
+						 stopTimer(Timer1);//达到定时时间后关闭定时器
+						 step1=OK; //步骤一完成 ，已经达到稳定状态，蜂鸣器响一下
+						 PrintString1("step1 is ok\n");
+					}
+					else//如果未达到定时时间或定时器未启动
+					{ 
+						
+						if(isStopped(Timer1)) //只有当定时器是停止状态时才启动定时器。
+						{
+							restartTimer(Timer1);
+							
+						}
+					}
+		////////////////////////////////////////////////////////////////		 
+				}
+			 }
+			 
+			 
+		 };
+		 break;
+		 case 2://模式二
+		 {
+			static bit step1=0;
+			static bit step2=0; 
+			static bit step3=0;
+			static bit step4=0;
+			if(step1)
+			{
+        if(step2)
+				{
+					if(step3)
+					{
+						if(step4)
+						{ 
+							mode=0;
+							
+							step1=0;
+							step2=0;
+							step3=0;
+							step4=0;
+							
+						}
+						else
+						{
+							 setPID_data(SET_ANGLE,110); //设定稳定角度
+							 setTimeout(Timer1,1000); //设置定时器定时长度 ,1秒
+							 startMotor();//电机开始工作
+							 if(abs(getPID_data(ERR))<2.0f)//当误差小于2°时，认为达到稳定,定时器就开始计时
+							{
+					//////////////////////定时器////////////////////////////////////////
+								if(isExpiredTimer(Timer1))   //如果达到定时时间
+								{
+									 stopTimer(Timer1);//达到定时时间后关闭定时器
+									 step4=OK; //步骤一完成 ，已经达到稳定状态，蜂鸣器响一下
+									 PrintString1("step4 is ok\n");
+								}
+								else//如果未达到定时时间或定时器未启动
+								{ 
+									
+									if(isStopped(Timer1)) //只有当定时器是停止状态时才启动定时器。
+									{
+										restartTimer(Timer1);
+										
+									}
+								}
+					////////////////////////////////////////////////////////////////		 
+							 }
+						}
+						
+					}
+					else
+					{
+						  setPID_data(SET_ANGLE,70); //设定稳定角度
+							 setTimeout(Timer1,1000); //设置定时器定时长度 ,1秒
+							 startMotor();//电机开始工作
+							 if(getPID_data(ERR)<2.0f)//当误差小于2°时，接近稳定,定时器就开始计时
+							{
+					//////////////////////定时器////////////////////////////////////////
+								if(isExpiredTimer(Timer1))   //如果达到定时时间
+								{
+									 stopTimer(Timer1);//达到定时时间后关闭定时器
+									 step3=OK; //步骤一完成 ，已经达到稳定状态，蜂鸣器响一下
+									 PrintString1("step3 is ok\n");
+								}
+								else//如果未达到定时时间或定时器未启动
+								{ 
+									
+									if(isStopped(Timer1)) //只有当定时器是停止状态时才启动定时器。
+									{
+										restartTimer(Timer1);
+										
+									}
+								}
+					////////////////////////////////////////////////////////////////		 
+							 }
+						
+					}
+					
+				}				
+				else
+				{
+				 setPID_data(SET_ANGLE,110); //设定稳定角度
+				 setTimeout(Timer1,1000); //设置定时器定时长度 ,1秒
+				 startMotor();//电机开始工作
+				 if(getPID_data(ERR)<2.0f)//当误差小于2°时，认为达到稳定,定时器就开始计时
+				{
+		//////////////////////定时器////////////////////////////////////////
+					if(isExpiredTimer(Timer1))   //如果达到定时时间
+					{
+						 stopTimer(Timer1);//达到定时时间后关闭定时器
+						 step2=OK; //步骤一完成 ，已经达到稳定状态，蜂鸣器响一下
+						 PrintString1("step2 is ok\n");
+					}
+					else//如果未达到定时时间或定时器未启动
+					{ 
+						
+						if(isStopped(Timer1)) //只有当定时器是停止状态时才启动定时器。
+						{
+							restartTimer(Timer1);
+							
+						}
+					}
+		////////////////////////////////////////////////////////////////		 
+				 }
+				}
+
+
+			}
+			else
+			{
+				 setPID_data(SET_ANGLE,70); //设定稳定角度
+				 setTimeout(Timer1,3000); //设置定时器定时长度 ,3秒
+				 startMotor();//电机开始工作
+				 if(<2.0f)//当误差小于2°时，认为达到稳定,定时器就开始计时
+				{
+		//////////////////////定时器////////////////////////////////////////
+					if(isExpiredTimer(Timer1))   //如果达到定时时间
+					{
+						 stopTimer(Timer1);//达到定时时间后关闭定时器
+						 step1=OK; //步骤一完成 ，已经达到稳定状态，蜂鸣器响一下
+						 PrintString1("step1 is ok\n");
+					}
+					else//如果未达到定时时间或定时器未启动
+					{ 
+						
+						if(isStopped(Timer1)) //只有当定时器是停止状态时才启动定时器。
+						{
+							restartTimer(Timer1);
+							
+						}
+					}
+		////////////////////////////////////////////////////////////////		 
+				}
+				
+			}
+	
+		
+		 };
+		 break;
+		 case 3: //模式3
+		 {
+			 static unsigned int mode2_ERR_times = 0;
+			 static bit mode2_step1 = 0;
+			 static bit mode2_step2 = 0;
+			 static unsigned int mode2_time = 0;
+			 static unsigned float mode2_Sta_angle = 0;
+			 
+			 setTimeout(Timer1,10);
+			 if(mode2_step1)
+			 {
+				 
+			 }
+			 else
+			 {
+				 setPID_data(SET_ANGLE,70);
+				 startMotor();
+				 if(getPID_data(ERR) < 2.0f)
+				 {
+					 if(isExpiredTimer(Timer1))
+					 {
+						 mode2_ERR_times++;
+						 mode2_Sta_angle += getPID_data(ERR);
+						 if(mode2_ERR_times >= 50)
+						 {
+							 mode2_Sta_angle /= mode2_ERR_times;
+							 mode2_ERR_times = 0;
+							 if(abs(mode2_ERR_times) < 5)
+							 {
+								 mode2_step = 1;
+							 }
+						 }
+					 }
+					 else
+					 {
+						 restartTimer(Timer1);
+					 }
+				 }
+			 }
+			 
+		 };
+		 break;
+		 case 4:  //模式4
+		 {
+			 
+			 
+		 };
+		 break;
+    
+		 default:
+		break;		 
+	 }
+	
+}
