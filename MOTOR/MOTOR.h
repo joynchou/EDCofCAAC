@@ -1,15 +1,12 @@
 /************************************************************
-* 组织名称： (C), 1988-1999, Tech. Co., Ltd.
-* 文件名称: test.cpp
-* 作者:
-* 版本 :
+* 组织名称：电子大赛小组
+* 文件名称: MOTOR.H
+* 作者:     周晨阳
+* 版本 :    1.0
 * 日期:
-* 描述: // 模块描述
-* 主要函数及其功能 : // 主要函数及其功能
-  1. -------
+* 描述: 	 电机相关头文件
 * 历史修改记录: // 历史修改记录
 * <作者> <时间> <版本 > <描述>
-* David 96/10/12 1.0 build this moudle
 ***********************************************************/
 #ifndef _MOTOR_H_
 #define _MOTOR_H_
@@ -26,6 +23,7 @@ PWM7 :P1.7 -> P0.6
 ************************************/
 void stopMotor(void);
 void startMotor(void);
+bit getMotorState();
 /*************************************************
 * 函数名称:double getPID_data(u8 DATA)
 * 描述: 读取pid参数      
@@ -65,12 +63,15 @@ void setMotorSpeed(bit motor,float speed);
 
 /*************************************************
 * 函数名称: void PID_config(float kp,float ki,float kd)
-* 描述:   pid算法初始化函数，参数是三个，P,I,D,
-*         此函数只能作为初始化，不能作为调整这三个值的接口
-          如果需要调整这三个值，请使用setPID_data()函数
+*                    描述:
+*************************************************
+* pid算法初始化函数，参数是三个，P,I,D,
+* 此函数只能作为初始化，不能作为调整这三个值的接口
+* 如果需要调整这三个值，请使用setPID_data()函数
+* ***********************************************
 * 输入: float kp,float ki,float kd
-* 输出: 无
-* 返回值: 无
+* 输出:     无
+* 返回值:   无
 * 其他说明: 无
 *************************************************/
 void PID_config(float kp,float ki,float kd);//pid算法初始化函数，参数是三个，PID
@@ -80,16 +81,15 @@ void PID_config(float kp,float ki,float kd);//pid算法初始化函数，参数是三个，PID
 /*************************************************
 * 函数名称: bit setBoardWithAngleAndPID(float angle)
 * 描述: 带pid算法的风摆角度调整函数
-* 输入: float 角度
+* 输入: 无
 * 返回值: 执行一次角度调整后，返回1
 * 其他说明: 若需一直调整需将此函数加入循环
 *************************************************/
-bit setBoardWithAngleAndPID(float angle);//风板角度设置函数,闭环控制，包含pid
+bit setBoardWithAngleAndPID(void);//风板角度设置函数,闭环控制，包含pid
 
 #define LEFT_MOTOR   1
 #define RIGHT_MOTOR  0
 #define STOP         0
-
 #define SET_ANGLE    0
 #define ERR          1
 #define ERR_LAST     2

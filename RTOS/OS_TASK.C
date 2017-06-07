@@ -2,7 +2,7 @@
 *FileName:	 TASK_C
 *Author	 :   JZHG1992
 *Versions:	 V1.0
-²»¿ÉÇÀÕ¼Ê½¼òµ¥ÊµÊ±ÄÚºË
+ä¸å¯æŠ¢å å¼ç®€å•å®æ—¶å†…æ ¸
 *********************************/
 
 #include "OS.H"
@@ -18,67 +18,67 @@
 
 
 /************************************
-*		 ÉèÖÃÏµÍ³ÈÎÎñÖ´ĞĞÆµ¶È
+*		 è®¾ç½®ç³»ç»Ÿä»»åŠ¡æ‰§è¡Œé¢‘åº¦
 *************************************/
 
-#define TASK_DELAY0 TASK_CLOCK/100  // ÈÎÎñ0µÄÖ´ĞĞÆµ¶È,50hz
-#define TASK_DELAY1 TASK_CLOCK/90  // ÈÎÎñ1µÄÖ´ĞĞÆµ¶È ,10hz
-#define TASK_DELAY2 TASK_CLOCK/30  // ÈÎÎñ2µÄÖ´ĞĞÆµ¶È
-#define TASK_DELAY3 TASK_CLOCK/30    // ÈÎÎñ3µÄÖ´ĞĞÆµ¶È
-#define TASK_DELAY4 TASK_CLOCK/30   // ÈÎÎñ4µÄÖ´ĞĞÆµ¶È
-#define TASK_DELAY5 TASK_CLOCK/8   // lcdË¢ĞÂÆµÂÊ
+#define TASK_DELAY0 TASK_CLOCK/100  // ä»»åŠ¡0çš„æ‰§è¡Œé¢‘åº¦,50hz
+#define TASK_DELAY1 TASK_CLOCK/90  // ä»»åŠ¡1çš„æ‰§è¡Œé¢‘åº¦ ,10hz
+#define TASK_DELAY2 TASK_CLOCK/30  // ä»»åŠ¡2çš„æ‰§è¡Œé¢‘åº¦
+#define TASK_DELAY3 TASK_CLOCK/30    // ä»»åŠ¡3çš„æ‰§è¡Œé¢‘åº¦
+#define TASK_DELAY4 TASK_CLOCK/30   // ä»»åŠ¡4
+#define TASK_DELAY5 TASK_CLOCK/8   // lcdåˆ·æ–°é¢‘ç‡
 
 
 //#define OS_DEBUG
 /************************************
-*		 ÈÎÎñ0º¯Êı
+*		 ä»»åŠ¡0å‡½æ•°
 *************************************/
 void task0(void)
 {
-		Task_Delay[0] = TASK_DELAY0;  // ÉèÖÃÈÎÎñÖ´ĞĞ¶È
+		Task_Delay[0] = TASK_DELAY0;  // è®¾ç½®ä»»åŠ¡æ‰§è¡Œåº¦
 #ifdef OS_DEBUG
 		PrintString1("task0 is on \n");  
 #endif
    getAngle(PRESENT_ANGLE) ;
-	 setBoardWithAngleAndPID(70);
+	 
 //	
 	
 }
 /************************************
-*		 ÈÎÎñ1º¯Êı
+*		 ä»»åŠ¡1å‡½æ•°
 *************************************/
 
 void task1( void )
 {
-	Task_Delay[1] = TASK_DELAY1;  // ÉèÖÃÈÎÎñÖ´ĞĞ¶È
+	Task_Delay[1] = TASK_DELAY1;  // è®¾ç½®ä»»åŠ¡æ‰§è¡Œåº¦
  
 #ifdef OS_DEBUG
 		PrintString1("task1 is on \n");  
 #endif
-     
+     setBoardWithAngleAndPID(70);
 
 }
 /************************************
-*		 ÈÎÎñ2º¯Êı
+*		 ä»»åŠ¡2å‡½æ•°
 *************************************/
 
 void task2( void )
 {
-	Task_Delay[2] = TASK_DELAY2;  // ÉèÖÃÈÎÎñÖ´ĞĞ¶È
+	Task_Delay[2] = TASK_DELAY2;  // è®¾ç½®ä»»åŠ¡æ‰§è¡Œåº¦
 	setAngle();
-	/* ÄãµÄÈÎÎñ */
+	/* ä½ çš„ä»»åŠ¡ */
 #ifdef OS_DEBUG
 		PrintString1("task2 is on \n");  
 #endif
 
 }
 /************************************
-*		 ÈÎÎñ3º¯Êı
+*		 ä»»åŠ¡3å‡½æ•°
 *************************************/
 
 void task3( void )
 {
-	Task_Delay[3] = TASK_DELAY3;  // ÉèÖÃÈÎÎñÖ´ĞĞ¶È
+	Task_Delay[3] = TASK_DELAY3;  // è®¾ç½®ä»»åŠ¡æ‰§è¡Œåº¦
 #ifdef OS_DEBUG
 		PrintString1("task3 is on \n");  
 #endif
@@ -87,14 +87,14 @@ void task3( void )
 }
 
 /************************************
-*		 ÈÎÎñ4º¯Êı
+*		 ä»»åŠ¡4å‡½æ•°
 *************************************/
 
 void task4( void )
 {
-	Task_Delay[4] = TASK_DELAY4;  // ÉèÖÃÈÎÎñÖ´ĞĞ¶È
+	Task_Delay[4] = TASK_DELAY4;  // è®¾ç½®ä»»åŠ¡æ‰§è¡Œåº¦
   sendScopeData();
-	/* ÄãµÄÈÎÎñ */
+	/* ä½ çš„ä»»åŠ¡ */
 #ifdef OS_DEBUG
 		PrintString1("task4 is on \n");  
 #endif
@@ -103,7 +103,7 @@ void task4( void )
 
  void task5( void )
 {
-    	Task_Delay[5] = TASK_DELAY5;  // ÉèÖÃÈÎÎñÖ´ĞĞ¶È
+    	Task_Delay[5] = TASK_DELAY5;  // è®¾ç½®ä»»åŠ¡æ‰§è¡Œåº¦
 
 	 	  LCD_UpdateAll();
 
@@ -114,8 +114,8 @@ void task4( void )
 
 
 /************************************
-*		 »ñµÃÈÎÎñÖ¸Õë
-*        Ìí¼ÓÄãµÄÈÎÎñÖ¸Õë
+*		 è·å¾—ä»»åŠ¡æŒ‡é’ˆ
+*        æ·»åŠ ä½ çš„ä»»åŠ¡æŒ‡é’ˆ
 *************************************/
 
 void ( *const task[] )() = {  task0,task1,task2,task3,task4,task5 };
