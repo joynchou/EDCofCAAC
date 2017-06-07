@@ -344,10 +344,17 @@ void modeStart(void)
 					 else
 					 {
 						 mode2_time++;//模式2执行次数累计
-						 if(mode2_time == 3)//当模式2运行3次后风机停止工作
+						 mode3_step = 1;
+						 if(mode2_time >= 3)//当模式2运行3次后风机停止工作
 						 {
 							 setMotorSpeed(LEFT_MOTOR,0.01f);
-							 setMotorSpeed(RIGHT_MOTOR,0.99f);
+							 setMotorSpeed(RIGHT_MOTOR,0.99f);	
+						 }
+						 else
+						 {
+							 mode2_step1 = 0;//重置模式2第一步
+							 mode2_step2 = 0;//重置模式2第二步
+							 mode2_step3 = 0;//重置模式2第三步
 						 }
 					 }
 ////////////////////步骤3///////////////////////////
