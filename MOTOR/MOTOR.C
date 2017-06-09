@@ -63,14 +63,14 @@ void startMotor(void)
 void setMotorSpeed(bit motor,float speed)
 {
 	
-		if(speed>0.999f)
+		if(speed>0.95f)
 			{
-		   speed=0.999f;
+		   speed=0.95f;
 	    }
-		if(speed<=0)
+		if(speed<0.05f)
 		{
 			
-			speed=0.001f;
+			speed=0.05f;
 		}
 		
 		if(motor)
